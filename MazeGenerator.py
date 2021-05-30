@@ -19,7 +19,7 @@ class cell:
     def openNeighbors(self):
         return [i for i in self.neighbors() if i.wall == False]
     def canBeDrilled(self):
-        return ((len(self.openNeighbors())<=1) or ((len(self.openNeighbors())==2) and (exit in self.openNeighbors())))
+        return ((len(self.openNeighbors())<=1) or ((len(self.openNeighbors())==2) and (exit in self.openNeighbors()) and len(exit.openNeighbors())==0))
     def __repr__(self):
         if showCoords:
             return "({} {})".format(self.x, self.y)
@@ -67,12 +67,13 @@ def drill(x):
             i.visited = True
             frontier.append(i)
     
-N = 30
-M = 30
+N = 10
+M = 10
 maze = [[cell(i, j) for i in range(N)] for j in range(M)]
     
-entranceCoord = (0, 4)
-exitCoord = (N-1, 23)
+entranceCoord = (0, 0)
+exitCoord = (N-1, 4)
+midPoints = [getCell(2, 8), getCell(N-4, M-4)]
 
 entrance = getCell(entranceCoord[0], entranceCoord[1])
 exit = getCell(exitCoord[0], exitCoord[1])
@@ -81,13 +82,24 @@ exit.visited = True
 entrance.visited = True
 frontier = [entrance]
 
+random.seed(10)
+
 while len(frontier)>0:
     drill(frontier[random.randint(0, len(frontier)-1)])
     
 for i in maze:
     print(i)
     
-for i in bfs(entrance, exit):
+origin = entrance
+path = []
+for i in midPoints:
+    destination = i
+    path.extend(bfs(origin, destination))
+    origin = destination
+    
+path.extend(bfs(origin, exit))
+
+for i in path:
     i.path = True
 print()
 print()
