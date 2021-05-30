@@ -8,6 +8,7 @@ class cell:
         self.y = y
         self.wall = True
         self.visited = False
+        self.path = False
     def neighbors(self):
         result = []
         result.extend([getCell(i, self.y) for i in {self.x-1, self.x+1} if i>=0 and i<=N-1])
@@ -22,6 +23,8 @@ class cell:
     def __repr__(self):
         if showCoords:
             return "({} {})".format(self.x, self.y)
+        if self.path:
+            return "^"
         if self.visited:
             if self.wall:
                 return "X"
@@ -32,6 +35,26 @@ class cell:
                 return "x"
             else:
                 return "o"
+            
+def bfs(origin, destination):
+    result = []
+    frontier = []
+    frontier.append(origin)
+    cameFrom = dict()
+    cameFrom[origin] = None
+    
+    while len(frontier)>0:
+        for i in frontier[0].openNeighbors():
+            if i not in cameFrom:
+                frontier.append(i)
+                cameFrom[i]=frontier[0]
+        del frontier[0]
+    head = destination
+    while head!=origin:
+        result.append(head)
+        head = cameFrom[head]
+    result.append(origin)
+    return result
     
 def getCell(x, y):
     return maze[y][x]
@@ -50,6 +73,7 @@ maze = [[cell(i, j) for i in range(N)] for j in range(M)]
     
 entranceCoord = (0, 4)
 exitCoord = (N-1, 23)
+
 entrance = getCell(entranceCoord[0], entranceCoord[1])
 exit = getCell(exitCoord[0], exitCoord[1])
 exit.wall = False
@@ -59,6 +83,14 @@ frontier = [entrance]
 
 while len(frontier)>0:
     drill(frontier[random.randint(0, len(frontier)-1)])
-     
+    
+for i in maze:
+    print(i)
+    
+for i in bfs(entrance, exit):
+    i.path = True
+print()
+print()
+print()
 for i in maze:
     print(i)
