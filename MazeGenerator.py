@@ -2,6 +2,8 @@ import random
 import Tkinter as tk
 from functools import partial
 
+Tests = False
+
 class cell:
     def __init__(self, x, y):
         self.x = x
@@ -52,7 +54,10 @@ def bfs(origin, destination):
     head = destination
     while head!=origin:
         result.append(head)
-        head = cameFrom[head]
+        if head in cameFrom:
+            head = cameFrom[head]
+        else:
+            break
     result.append(origin)
     return result
     
@@ -160,16 +165,17 @@ def generateMaze():
 
     for i in path:
         i.path = True  
-      
-    for i in maze:
-        for j in i:
-            if j.wall:
-                mazeButtons[j.y][j.x].config(bg='#000000')
-            elif j not in {entrance, exit}:
-                if j.path:
-                    mazeButtons[j.y][j.x].config(bg='#ffff00')
-                else:
-                    mazeButtons[j.y][j.x].config(bg='#ffffff')
+    
+    if not Tests:
+        for i in maze:
+            for j in i:
+                if j.wall:
+                    mazeButtons[j.y][j.x].config(bg='#000000')
+                elif j not in {entrance, exit}:
+                    if j.path:
+                        mazeButtons[j.y][j.x].config(bg='#ffff00')
+                    else:
+                        mazeButtons[j.y][j.x].config(bg='#ffffff')
         
 def clickMazeButton(x, y):
     #print(x)
@@ -233,29 +239,168 @@ def clickMazeButton(x, y):
                 exitCoord = (x, y) 
                 mazeButtons[y][x].config(bg ='#19ff44')
                 selectEntryExit=0
-  
-window = tk.Tk()
+
+def Test1():
+    global N
+    global M
+    global entranceCoord
+    global exitCoord
+    global maze
+    N = 10
+    M = 12
+    entranceCoord = (0, 7)
+    exitCoord = (9, 9)
+    generateMaze()
+    for i in maze:
+        print(i)
         
-window.geometry("750x680")
+def Test2():
+    global N
+    global M
+    global entranceCoord
+    global exitCoord
+    global maze
+    N = 20
+    M = 10
+    entranceCoord = (4, 0)
+    exitCoord = (15, 0)
+    generateMaze()
+    for i in maze:
+        print(i)
+
+def Test3():
+    global N
+    global M
+    global entranceCoord
+    global exitCoord
+    global maze
+    N = 10
+    M = 10
+    entranceCoord = (0, 5)
+    exitCoord = (0, 7)
+    generateMaze()
+    assert getCell(0, 6).wall
+    
+def Test4():
+    global N
+    global M
+    global entranceCoord
+    global exitCoord
+    global entrance
+    global exit
+    global maze
+    global midpoints
+    N = 13 
+    M = 17
+    entranceCoord = (0, 5)
+    exitCoord = (0, 7)
+    generateMaze()
+    for i in maze:
+        for j in i:
+            if (j.wall == False) and (j!=entrance) and (j!=exit):
+                x = j.x
+                y = j.x
+                midpoints.append(getCell(x, y))
+                break
+        if len(midpoints)==1:
+            break
+    
+    origin = entrance
+    path = []
+    for i in midpoints:
+        destination = i
+        path.extend(bfs(origin, destination))
+        origin = destination
         
-mazeButtons = []
-widthLabel = tk.Label(text = "Width:")
-widthEntry = tk.Entry(width = 2)
-heightLabel = tk.Label(text = "Height:")
-heightEntry = tk.Entry(width = 2)
-prepareButton = tk.Button(text = "Prepare", width = 8, command=lambda: setupMaze(widthEntry.get(), heightEntry.get()))
-generateButton = tk.Button(text = "Generate", width = 8, command=lambda: generateMaze())
+    path.extend(bfs(origin, exit))
 
-widthLabel.place(x = 0, y=0)
-widthEntry.place(x = 50, y=0)
-heightLabel.place(x = 0, y=17)
-heightEntry.place(x = 50, y=17)
-prepareButton.place(x = 0, y=40)
+    for i in path:
+        i.path = True 
+    
+    assert getCell(x, y).path
+    
+def Test5():
+    global N
+    global M
+    global entranceCoord
+    global exitCoord
+    global entrance
+    global exit
+    global maze
+    global midpoints
+    N = 13 
+    M = 17
+    entranceCoord = (0, 5)
+    exitCoord = (0, 7)
+    generateMaze()
+    for i in maze:
+        for j in i:
+            if (j.wall == False) and (j!=entrance) and (j!=exit):
+                x = j.x
+                y = j.x
+                midpoints.append(getCell(x, y))
+                break
+        if len(midpoints)==2:
+            break
+    
+    midpoints.remove(midpoints[0])
+    
+    for i in maze:
+        for j in i:
+            if (j.wall == False) and (j!=entrance) and (j!=exit) and (j not in midpoints):
+                x = j.x
+                y = j.x
+                midpoints.append(getCell(x, y))
+                break
+        if len(midpoints)==1:
+            break
+    
+    origin = entrance
+    path = []
+    for i in midpoints:
+        destination = i
+        path.extend(bfs(origin, destination))
+        origin = destination
+        
+    path.extend(bfs(origin, exit))
 
-widthEntry.insert(0, "10")
-heightEntry.insert(0, "10")
+    for i in path:
+        i.path = True 
+    
+    assert getCell(x, y).path
 
-selectEntryExit = -1
-generated = False
+if Tests:
+    Test1()
+    print()
+    Test2()
+    Test3()
+    Test4()
+    Test5()
+    
+else:
+    window = tk.Tk()
+            
+    window.geometry("750x680")
+    window.resizable(False, False) 
+            
+    mazeButtons = []
+    widthLabel = tk.Label(text = "Width:")
+    widthEntry = tk.Entry(width = 2)
+    heightLabel = tk.Label(text = "Height:")
+    heightEntry = tk.Entry(width = 2)
+    prepareButton = tk.Button(text = "Prepare", width = 8, command=lambda: setupMaze(widthEntry.get(), heightEntry.get()))
+    generateButton = tk.Button(text = "Generate", width = 8, command=lambda: generateMaze())
 
-window.mainloop()
+    widthLabel.place(x = 0, y=0)
+    widthEntry.place(x = 50, y=0)
+    heightLabel.place(x = 0, y=17)
+    heightEntry.place(x = 50, y=17)
+    prepareButton.place(x = 0, y=40)
+
+    widthEntry.insert(0, "10")
+    heightEntry.insert(0, "10")
+
+    selectEntryExit = -1
+    generated = False
+
+    window.mainloop()
